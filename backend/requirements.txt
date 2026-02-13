@@ -25,7 +25,7 @@ torch
 transformers
 
 # ============ Speech-to-Text ============
-faster-whisper==0.10.0
+faster-whisper>=0.10.0
 # openai-whisper==20231117  # Alternative STT
 
 # ============ Text-to-Speech ============
