@@ -19,10 +19,7 @@ pdfplumber==0.10.3  # Alternative PDF processor
 nbformat==5.9.2  # For Jupyter Notebook parsing
 nbconvert==7.14.2
 
-# ============ Embeddings ============
-sentence-transformers
-torch
-transformers
+
 
 # ============ Speech-to-Text ============
 faster-whisper>=0.10.0
