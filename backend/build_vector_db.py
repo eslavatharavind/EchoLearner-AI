@@ -28,19 +28,27 @@ class VectorDBBuilder:  # Define a class for building and managing the document 
         self.embedding_dim = embedding_dim or Config.EMBEDDING_DIMENSION  # Set the expected vector size
         self.db_path = Config.VECTOR_DB_PATH  # Set where the database will be saved
         
-        # Initialize embedding model (the "translator" that turns words into numbers)
-        logger.info(f"Loading embedding model: {self.embedding_model_name}")  # Log loading start
-        self.embedding_model = SentenceTransformer(self.embedding_model_name)  # Load the AI model
-        
-        # Update dimension based on actual model (just in case the config was slightly off)
-        self.embedding_dim = self.embedding_model.get_sentence_embedding_dimension()
+        # Lazy load embedding model (don't load it yet to save memory at startup)
+        self.embedding_model = None
         
         # Initialize FAISS index placeholders
         self.index = None  # This will hold the actual searchable index
         self.documents = []  # List to store the original text chunks
         self.metadata = []   # List to store info about each chunk (like filename)
         
-        logger.info(f"VectorDBBuilder initialized with {self.embedding_dim}D embeddings")  # Log finish
+        logger.info(f"VectorDBBuilder initialized (Lazy loading model: {self.embedding_model_name})")  # Log finish
+
+    def _get_model(self):
+        """Lazy load the embedding model"""
+        if self.embedding_model is None:
+            logger.info(f"Loading embedding model: {self.embedding_model_name}")
+            self.embedding_model = SentenceTransformer(self.embedding_model_name)
+            
+            # Update dimension based on actual model
+            if self.embedding_dim is None:
+                self.embedding_dim = self.embedding_model.get_sentence_embedding_dimension()
+                
+        return self.embedding_model
     
     def build_index(self, chunks: List[Dict], rebuild: bool = False) -> int:  # Main function to build DB
         """
@@ -57,7 +65,9 @@ class VectorDBBuilder:  # Define a class for building and managing the document 
         logger.info(f"Building embeddings for {len(texts)} chunks...")  # Log progress
         
         # Generate embeddings (turn all text into lists of numbers)
-        embeddings = self.embedding_model.encode(
+        # Generate embeddings (turn all text into lists of numbers)
+        model = self._get_model()
+        embeddings = model.encode(
             texts,
             show_progress_bar=True,  # Show a loading bar in the terminal
             convert_to_numpy=True  # Ensure result is in a math-friendly format

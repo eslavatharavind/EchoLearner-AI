@@ -32,9 +32,8 @@ class DocumentRetriever:  # Define a class specifically for finding document par
         self.embedding_model_name = embedding_model or Config.EMBEDDING_MODEL  # Use AI model from config
         self.top_k = top_k or Config.RETRIEVAL_TOP_K  # Set default number of results to find
         
-        # Initialize embedding model (to translate the user's question into numbers)
-        logger.info(f"Loading embedding model: {self.embedding_model_name}")
-        self.embedding_model = SentenceTransformer(self.embedding_model_name)
+        # Lazy load embedding model
+        self.embedding_model = None
         
         # Load the saved vector database from disk
         self.db_builder = VectorDBBuilder(embedding_model=self.embedding_model_name)
@@ -44,6 +43,13 @@ class DocumentRetriever:  # Define a class specifically for finding document par
             logger.info(f"Retriever initialized with {self.db_builder.index.ntotal} documents")
         else:  # If no database found
             logger.warning("No vector database found. Please build index first.")
+
+    def _get_model(self):
+        """Lazy load the embedding model"""
+        if self.embedding_model is None:
+            logger.info(f"Loading embedding model for retriever: {self.embedding_model_name}")
+            self.embedding_model = SentenceTransformer(self.embedding_model_name)
+        return self.embedding_model
     
     def retrieve(  # Main function to search for answers
         self,
@@ -61,7 +67,8 @@ class DocumentRetriever:  # Define a class specifically for finding document par
         k = top_k or self.top_k  # Decide how many items to look for
         
         # Turn the user's text question into a list of numbers (embedding)
-        query_embedding = self.embedding_model.encode(
+        model = self._get_model()
+        query_embedding = model.encode(
             [query],
             convert_to_numpy=True
         ).astype('float32')  # Convert to standard format
