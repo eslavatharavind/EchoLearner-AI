@@ -3,15 +3,18 @@ uvicorn==0.27.0
 python-dotenv==1.0.0
 pydantic==2.5.3
 
-langchain==0.1.6
-langchain-community==0.0.19
-langchain-openai==0.0.5
-langchain-text-splitters==0.0.1  # Added for chunker.py import
+# ============ LangChain & RAG ============
+langchain>=0.1.6
+langchain-community>=0.0.19
+langchain-openai>=0.0.5
+langchain-text-splitters>=0.0.1  # Added for chunker.py import
 
+# ============ Vector Database ============
 faiss-cpu
+# chromadb==0.4.22  # Alternative vector DB
 
 # ============ Document Processing ============
-PyMuPDF4LLM==0.0.17  # Lightweight PyMuPDF wrapper with pre-built wheels for LLM apps
+PyMuPDF4LLM>=0.0.17  # Lightweight PyMuPDF wrapper with pre-built wheels for LLM apps
 pdfplumber==0.10.3  # Alternative PDF processor
 nbformat==5.9.2  # For Jupyter Notebook parsing
 nbconvert==7.14.2
