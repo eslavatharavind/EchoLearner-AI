@@ -93,7 +93,10 @@ class Config:  # Define a class to hold all our settings in one place
     # ============ Server Configuration ============
     SERVER_HOST = os.getenv("SERVER_HOST", "0.0.0.0")  # Run server on all available network addresses
     SERVER_PORT = int(os.getenv("SERVER_PORT", "8000"))  # Run server on port 8000
-    CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:8501,http://localhost:3000").split(",")  # Allowed frontends
+    CORS_ORIGINS = os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:3000,http://localhost:5173,http://localhost:8501,https://echo-learner-ai.vercel.app"
+    ).split(",")  # Allowed frontends (local dev + production Vercel; override via CORS_ORIGINS env var)
     
     # ============ Memory Configuration ============
     MEMORY_MAX_TOKENS = int(os.getenv("MEMORY_MAX_TOKENS", "1000"))  # Limit how much chat history AI remembers
