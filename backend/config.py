@@ -58,7 +58,7 @@ class Config:  # Define a class to hold all our settings in one place
     # ============ STT Configuration ============
     # Options: "faster-whisper", "openai-whisper"
     STT_PROVIDER = os.getenv("STT_PROVIDER", "faster-whisper")  # Choose tool for hearing user voice
-    STT_MODEL = os.getenv("STT_MODEL", "base")  # tiny, base, small, medium, large (bigger is better but slower)
+    STT_MODEL = os.getenv("STT_MODEL", "tiny")  # tiny, base, small, medium, large (tiny keeps memory low for small deployments)
     STT_LANGUAGE = os.getenv("STT_LANGUAGE", "en")  # Set language to English
     
     # Silence detection settings

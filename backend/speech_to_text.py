@@ -30,23 +30,34 @@ class SpeechToText:  # Define the class for converting voice to text
         self.model_size = model_size or Config.STT_MODEL  # Select the model size (tiny, small, base, etc.)
         self.language = language or Config.STT_LANGUAGE  # Select the default language
         self.device = device  # Choose to run on CPU or Graphics Card
-        
+
+        # Lazy loading: we do NOT load the model here (loading it at startup would
+        # use a lot of memory before any voice request even arrives). The model is
+        # loaded on the first transcription request instead — see _load_model().
+        self.model = None  # Placeholder; the real model is loaded on demand
+        logger.info(f"Speech-to-Text ready (model '{self.model_size}' will load on first use)")
+
+    def _load_model(self):  # Load the Faster-Whisper model the first time it is actually needed
+        """Load the Whisper model on demand (lazy loading to save memory at startup)"""
+        if self.model is not None:  # If it is already loaded, do nothing
+            return
+
         logger.info(f"Loading Faster-Whisper model: {self.model_size}")  # Log the start of loading
         start_time = time.time()  # Record the start time
-        
+
         # Initialize Faster-Whisper model (the "ears" of our AI)
         # compute_type: "int8" makes it run fast on your standard CPU
-        compute_type = "int8" if device == "cpu" else "float16"
-        
+        compute_type = "int8" if self.device == "cpu" else "float16"
+
         self.model = WhisperModel(
             self.model_size,
-            device=device,
+            device=self.device,
             compute_type=compute_type
         )
-        
+
         load_time = time.time() - start_time  # Calculate how long loading took
         logger.info(f"Model loaded in {load_time:.2f} seconds")  # Log finish
-    
+
     def transcribe(  # Main function to turn an audio file into text
         self,
         audio_path: str,
@@ -56,10 +67,12 @@ class SpeechToText:  # Define the class for converting voice to text
         Transcribe audio file to text
         """
         audio_path = Path(audio_path)  # Ensure path is a Path object
-        
+
         if not audio_path.exists():  # If the audio file is missing
             raise FileNotFoundError(f"Audio file not found: {audio_path}")
-        
+
+        self._load_model()  # Load the Whisper model on first use (lazy loading)
+
         logger.info(f"Transcribing: {audio_path.name}")  # Log processing start
         start_time = time.time()  # Start the clock
         
@@ -148,7 +161,7 @@ class SpeechToText:  # Define the class for converting voice to text
 if __name__ == "__main__":  # Code for manual testing
     # Example usage
     try:
-        stt = SpeechToText(model_size="base")  # Load the model
+        stt = SpeechToText()  # Initialize the engine (uses the default model from config)
         
         print(f"Speech-to-Text initialized with {stt.model_size} model")
         print(f"Supported formats: {', '.join(stt.get_supported_formats())}")
