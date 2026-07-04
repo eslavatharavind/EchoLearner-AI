@@ -4,6 +4,11 @@ import { Upload, Mic, Send, Loader2, Play, Volume2, X, FileText, CheckCircle2 } 
 import { motion, AnimatePresence } from 'framer-motion'; // Import tool for smooth animations
 import './App.css'; // Import the design styles
 
+// Base URL of the backend API. Configured via VITE_API_URL so the same build
+// can target a local backend in development and the deployed Render backend in
+// production (set in .env.development / .env.production or the host's env vars).
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const App = () => { // Define the main frontend application
     // Variables that keep track of what's happening on the screen
     const [file, setFile] = useState(null); // Current uploaded PDF file
@@ -92,13 +97,13 @@ const App = () => { // Define the main frontend application
         formData.append('rebuild_index', 'true'); // Tell server to make a new DB
 
         try {
-            const response = await axios.post('/api/upload', formData); // Send to backend
+            const response = await axios.post(`${API_URL}/upload`, formData); // Send to backend
             setIsProcessing(false); // Stop loading screen
             setIsReady(true); // Show the chat screen
 
             // Play a greeting if the AI says hello first
             if (response.data.greeting_audio) {
-                const audioPath = `/audio/${response.data.greeting_audio.split('\\').pop().split('/').pop()}`;
+                const audioPath = `${API_URL}/audio/${response.data.greeting_audio.split('\\').pop().split('/').pop()}`;
                 audioRef.current.src = audioPath;
                 setIsSpeaking(true);
                 audioRef.current.play();
@@ -230,7 +235,7 @@ const App = () => { // Define the main frontend application
             formData.append('use_retrieval', 'true');
             formData.append('return_audio', 'true');
 
-            const response = await axios.post('/api/ask', formData); // Talk to backend
+            const response = await axios.post(`${API_URL}/ask`, formData); // Talk to backend
             handleAgentResponse(response.data); // Handle the AI answer
         } catch (error) {
             console.error('Question failed:', error);
@@ -248,7 +253,7 @@ const App = () => { // Define the main frontend application
             formData.append('use_retrieval', 'true');
             formData.append('return_audio', 'true');
 
-            const response = await axios.post('/api/ask', formData);
+            const response = await axios.post(`${API_URL}/ask`, formData);
 
             if (response.data.question) {
                 setMessages(prev => [...prev, { role: 'user', content: response.data.question }]);
@@ -297,7 +302,7 @@ const App = () => { // Define the main frontend application
         };
 
         if (data.audio_path && !isMuted) {
-            const audioPath = `/audio/${data.audio_path.split('\\').pop().split('/').pop()}`;
+            const audioPath = `${API_URL}/audio/${data.audio_path.split('\\').pop().split('/').pop()}`;
             audioRef.current.src = audioPath;
 
             // Wait for audio to be ready so we know its duration
@@ -319,7 +324,7 @@ const App = () => { // Define the main frontend application
     const handleDeleteHistory = async () => {
         if (window.confirm('Are you sure you want to clear your conversation history?')) {
             try {
-                await axios.post('/api/clear-memory');
+                await axios.post(`${API_URL}/clear-memory`);
                 setMessages([]);
                 stopAudio();
                 alert('History cleared successfully.');
