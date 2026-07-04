@@ -6,6 +6,7 @@ Backend API with document upload and voice query endpoints - Built with FastAPI
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form  # Import FastAPI tools for building web APIs
 from fastapi.middleware.cors import CORSMiddleware  # Import tool to allow different websites to talk to this API
 from fastapi.responses import FileResponse, JSONResponse  # Import ways to send files or data back to user
+from contextlib import asynccontextmanager  # Import helper for the modern startup/shutdown lifespan
 from pathlib import Path  # Import Path for managing file and folder paths
 from typing import Optional  # Import Optional for variables that might be empty
 import shutil  # Import tools for copying files
@@ -34,11 +35,60 @@ logging.basicConfig(  # Configure how we record server messages
 )
 logger = logging.getLogger(__name__)  # Create a logger object for this specific file
 
+# Global instances (holders for our tools) - declared before lifespan so it can fill them in
+vector_db_builder: Optional["VectorDBBuilder"] = None  # Placeholder for the database creator
+tutor_agent: Optional["TutorAgent"] = None  # Placeholder for the AI tutor
+stt_engine: Optional["SpeechToText"] = None  # Placeholder for the voice-to-text tool
+tts_engine: Optional["TextToSpeech"] = None  # Placeholder for the text-to-voice tool
+
+
+@asynccontextmanager  # Mark this as the modern startup/shutdown handler (replaces deprecated on_event)
+async def lifespan(app: FastAPI):  # Runs once when the server starts, then again on shutdown
+    """Initialize services on startup"""
+    global vector_db_builder, tutor_agent, stt_engine, tts_engine  # Tell Python we are using the global variables
+
+    logger.info("Starting EchoLearn AI Server...")  # Log that server initialization began
+
+    try:  # Start error checking
+        # Validate configuration
+        Config.validate_config()  # Check if all API keys and settings are correct
+        Config.ensure_directories()  # Make sure needed folders like 'uploads' exist
+
+        # Initialize vector database builder
+        vector_db_builder = VectorDBBuilder()  # Set up the database tool
+
+        # Try to load existing index
+        if vector_db_builder.load_index():  # Check for an existing saved database
+            logger.info("Loaded existing vector database")  # Log success if found
+        else:  # If no database found
+            logger.info("No existing vector database found")  # Log that we are starting fresh
+
+        # Initialize tutor agent
+        tutor_agent = TutorAgent(use_memory=True)  # Create the AI tutor with "memory" to remember conversation
+        logger.info("Tutor agent initialized")  # Log success
+
+        # Initialize speech engines
+        stt_engine = SpeechToText()  # Create the tool for hearing user voice
+        logger.info("Speech-to-text engine initialized")  # Log success
+
+        tts_engine = TextToSpeech()  # Create the tool for speaking to user
+        logger.info("Text-to-speech engine initialized")  # Log success
+
+        logger.info("✓ EchoLearn AI Server started successfully")  # Log that everything is ready
+
+    except Exception as e:  # If something broke during startup
+        logger.error(f"Error during startup: {e}")  # Record the error in logs
+        raise  # Stop the server because it can't run properly
+
+    yield  # Hand control back to FastAPI; everything above runs on startup, below on shutdown
+
+
 # Initialize FastAPI app
 app = FastAPI(  # Create the main FastAPI application object
     title="EchoLearn AI API",  # Give our API a name
     description="Voice tutor API with RAG for document-based learning",  # Describe what the API does
-    version="1.0.0"  # Set the version number
+    version="1.0.0",  # Set the version number
+    lifespan=lifespan  # Use our modern startup/shutdown handler
 )
 
 # Configure CORS
@@ -50,56 +100,11 @@ app.add_middleware(  # Add a "security guard" layer to our app
     allow_headers=["*"],  # Allow all types of information in request headers
 )
 
-# Global instances (holders for our tools)
-vector_db_builder: Optional[VectorDBBuilder] = None  # Placeholder for the database creator
-tutor_agent: Optional[TutorAgent] = None  # Placeholder for the AI tutor
-stt_engine: Optional[SpeechToText] = None  # Placeholder for the voice-to-text tool
-tts_engine: Optional[TextToSpeech] = None  # Placeholder for the text-to-voice tool
-
 # Document processors (the workers that prepare our files)
 pdf_loader = PDFLoader()  # Create the PDF reader worker
 notebook_loader = NotebookLoader(include_code=True, include_outputs=False)  # Create the Notebook reader worker
 text_cleaner = TextCleaner()  # Create the text cleaning worker
 text_chunker = TextChunker()  # Create the text splitting worker
-
-
-@app.on_event("startup")  # Tell FastAPI to run this function when the server starts
-async def startup_event():  # Define the startup logic
-    """Initialize services on startup"""
-    global vector_db_builder, tutor_agent, stt_engine, tts_engine  # Tell Python we are using the global variables
-    
-    logger.info("Starting EchoLearn AI Server...")  # Log that server initialization began
-    
-    try:  # Start error checking
-        # Validate configuration
-        Config.validate_config()  # Check if all API keys and settings are correct
-        Config.ensure_directories()  # Make sure needed folders like 'uploads' exist
-        
-        # Initialize vector database builder
-        vector_db_builder = VectorDBBuilder()  # Set up the database tool
-        
-        # Try to load existing index
-        if vector_db_builder.load_index():  # Check for an existing saved database
-            logger.info("Loaded existing vector database")  # Log success if found
-        else:  # If no database found
-            logger.info("No existing vector database found")  # Log that we are starting fresh
-        
-        # Initialize tutor agent
-        tutor_agent = TutorAgent(use_memory=True)  # Create the AI tutor with "memory" to remember conversation
-        logger.info("Tutor agent initialized")  # Log success
-        
-        # Initialize speech engines
-        stt_engine = SpeechToText()  # Create the tool for hearing user voice
-        logger.info("Speech-to-text engine initialized")  # Log success
-        
-        tts_engine = TextToSpeech()  # Create the tool for speaking to user
-        logger.info("Text-to-speech engine initialized")  # Log success
-        
-        logger.info("✓ EchoLearn AI Server started successfully")  # Log that everything is ready
-        
-    except Exception as e:  # If something broke during startup
-        logger.error(f"Error during startup: {e}")  # Record the error in logs
-        raise  # Stop the server because it can't run properly
 
 
 @app.get("/")  # Define a response for visiting the root website address
