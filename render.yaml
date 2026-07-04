@@ -11,11 +11,37 @@ services:
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
-      - key: OPENAI_API_KEY
-        sync: false
+        value: 3.11.9
+      # ----- Secrets: set the actual values in the Render dashboard -----
       - key: GROQ_API_KEY
         sync: false
+      - key: OPENAI_API_KEY   # Optional — only needed if you switch to OpenAI LLM/TTS
+        sync: false
+      # ----- LLM: free Groq stack (matches local .env) -----
+      - key: LLM_PROVIDER
+        value: groq
+      - key: GROQ_MODEL
+        value: llama-3.1-8b-instant
+      - key: LLM_MAX_TOKENS
+        value: "500"
+      # ----- TTS: free Google TTS (no API key, produces mp3 directly) -----
+      - key: TTS_PROVIDER
+        value: gtts
+      # ----- STT: smallest Whisper model to stay within free-tier RAM -----
+      - key: STT_PROVIDER
+        value: faster-whisper
+      - key: STT_MODEL
+        value: tiny
+      # ----- Embeddings / Vector DB (local, no API key) -----
+      - key: EMBEDDING_PROVIDER
+        value: sentence-transformers
+      - key: EMBEDDING_MODEL
+        value: all-MiniLM-L6-v2
+      # ----- Allow the deployed frontend to call this API -----
+      - key: CORS_ORIGINS
+        value: https://echolearner-frontend.onrender.com,http://localhost:3000
+      - key: HF_HUB_DISABLE_SYMLINKS_WARNING
+        value: "1"
     autoDeploy: true
 
   # Frontend Static Site
