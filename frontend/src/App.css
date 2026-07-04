@@ -722,3 +722,195 @@
         opacity: 1;
     }
 }
+
+/* ============================================================
+   RESPONSIVE — Tablet & Mobile
+   Keeps everything usable down to small phones, prevents the
+   horizontal overflow caused by the desktop input-zone margins.
+   ============================================================ */
+
+/* Tablet and below */
+@media (max-width: 768px) {
+    .app-container {
+        height: 100vh;
+        height: 100dvh;
+        /* Fixed backgrounds are janky/broken on mobile browsers */
+        background-attachment: scroll;
+    }
+
+    .app-header {
+        padding: 0.8rem 1rem;
+    }
+
+    .logo {
+        font-size: 1.15rem;
+        gap: 0.4rem;
+    }
+
+    .logo-icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Hide the little "v2.0" tag to save space */
+    .center-logo>span:last-child {
+        display: none;
+    }
+
+    /* Show only the status icon (Ready/Waiting) on small screens */
+    .status-tag span {
+        display: none;
+    }
+
+    .status-tag {
+        padding: 0.4rem;
+    }
+
+    .back-btn span {
+        display: none;
+    }
+
+    .main-content {
+        padding: 0.75rem;
+    }
+
+    /* Upload card */
+    .upload-card {
+        padding: 2rem 1.25rem;
+        border-radius: 1.5rem;
+    }
+
+    .icon-wrapper {
+        width: 72px;
+        height: 72px;
+        margin-bottom: 1.5rem;
+    }
+
+    .upload-card h2 {
+        font-size: 1.5rem;
+    }
+
+    .upload-card p {
+        margin-bottom: 1.75rem;
+        font-size: 0.95rem;
+    }
+
+    .upload-button {
+        padding: 0.85rem 2rem;
+        display: block;
+        width: 100%;
+    }
+
+    /* Chat — fill the available space instead of the desktop fixed calc() */
+    .chat-zone {
+        height: 100%;
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .chat-window-bordered {
+        border-radius: 1.25rem;
+        padding: 1rem;
+        border-width: 1px;
+    }
+
+    /* Stack the avatar board above the action buttons */
+    .chat-window-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .ai-avatar-board {
+        max-width: none;
+        padding: 0.6rem 0.85rem;
+        gap: 0.75rem;
+    }
+
+    .robot-img {
+        width: 38px;
+        height: 38px;
+    }
+
+    .avatar-info h3 {
+        font-size: 1.05rem;
+    }
+
+    .chat-header-actions {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .hands-free-toggle,
+    .mute-toggle,
+    .delete-btn-inline {
+        padding: 0.45rem 0.75rem;
+        font-size: 0.8rem;
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+
+    .chat-messages {
+        padding: 0.5rem;
+        gap: 1rem;
+    }
+
+    .message {
+        max-width: 90%;
+    }
+
+    .message-content {
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+    }
+
+    /* Drop the desktop negative margins that push content off-screen */
+    .input-zone {
+        max-width: 100%;
+        margin: 0;
+        padding: 0.25rem 0;
+    }
+
+    .input-wrapper {
+        border-radius: 1.25rem;
+        padding: 0.4rem 0.6rem;
+        gap: 0.5rem;
+        min-height: 54px;
+    }
+
+    .input-wrapper textarea {
+        font-size: 0.95rem;
+        padding: 0.4rem 0.5rem;
+    }
+
+    .voice-btn,
+    .send-btn {
+        width: 42px;
+        height: 42px;
+        flex-shrink: 0;
+    }
+}
+
+/* Small phones — collapse action buttons to icons only */
+@media (max-width: 400px) {
+    .logo {
+        font-size: 1rem;
+    }
+
+    .hands-free-toggle span,
+    .mute-toggle span,
+    .delete-btn-inline span {
+        display: none;
+    }
+
+    .hands-free-toggle,
+    .mute-toggle,
+    .delete-btn-inline {
+        flex: 0 0 auto;
+        padding: 0.5rem;
+    }
+
+    .chat-header-actions {
+        justify-content: flex-end;
+    }
+}
